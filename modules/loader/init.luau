@@ -48,8 +48,20 @@ function Loader.LoadChildren(parent: Instance, predicate: PredicateFn?): { [stri
 			if predicate and not predicate(child) then
 				continue
 			end
-			local m = require(child)
-			modules[child.Name] = m
+
+			local thread = task.spawn(function()
+				local success, result = pcall(require, child)
+
+				if success then
+					modules[child.Name] = result
+				else
+					warn(`Error while loading "{child.Name}": {result}`)
+				end
+			end)
+
+			if coroutine.status(thread) ~= "dead" then
+				warn(child, "yields on require!")
+			end
 		end
 	end
 	return modules

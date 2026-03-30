@@ -450,7 +450,7 @@ function Trove.Connect(
 
 	local confirmedSignal = signal :: SignalLike
 
-	return self:Add(confirmedSignal:Connect(fn))
+	return self:Add(confirmedSignal:Connect(fn), "Disconnect")
 end
 
 --[=[
@@ -489,7 +489,7 @@ function Trove.Once(
 		self:Pop(conn)
 	end)
 
-	return self:Add(conn)
+	return self:Add(conn, "Disconnect")
 end
 
 --[=[
@@ -766,6 +766,20 @@ function Trove.AttachToInstance(self: TroveInternal, instance: Instance)
 
 	return self:Connect(instance.Destroying, function()
 		self:Destroy()
+	end)
+end
+
+function Trove.AttachToInstanceAncestry(self: TroveInternal, instance: Instance)
+	if self._cleaning then
+		error("cannot call trove:AttachToInstanceAncestry() while cleaning", 2)
+	elseif not instance:IsDescendantOf(game) then
+		error("instance is not a descendant of the game hierarchy", 2)
+	end
+
+	return self:Connect(instance:GetPropertyChangedSignal("Parent"), function()
+		if not instance.Parent then
+			self:Destroy()
+		end
 	end)
 end
 
