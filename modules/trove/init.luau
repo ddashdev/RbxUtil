@@ -24,6 +24,7 @@ export type Trove = {
 	Clean: (self: Trove) -> (),
 	WrapClean: (self: Trove) -> () -> (),
 	AttachToInstance: (self: Trove, instance: Instance) -> RBXScriptConnection,
+	AttachToInstanceAncestry: (self: Trove, instance: Instance) -> RBXScriptConnection,
 	Destroy: (self: Trove) -> (),
 }
 
