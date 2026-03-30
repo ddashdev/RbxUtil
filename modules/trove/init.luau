@@ -69,6 +69,7 @@ export type Trackable =
 type ConnectionLike = {
 	Connected: boolean,
 	Disconnect: (self: ConnectionLike) -> (),
+	Destroy: ((self: ConnectionLike) -> ())?,
 }
 
 --[=[
@@ -80,7 +81,11 @@ type ConnectionLike = {
 ]=]
 type ConnectionLikeMetatable = typeof(setmetatable(
 	{},
-	{} :: { Connected: boolean, Disconnect: (self: ConnectionLikeMetatable) -> () }
+	{} :: {
+		Connected: boolean,
+		Disconnect: (self: ConnectionLikeMetatable) -> (),
+		Destroy: ((self: ConnectionLikeMetatable) -> ())?,
+	}
 ))
 
 --[=[
