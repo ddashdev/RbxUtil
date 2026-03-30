@@ -1,9 +1,8 @@
 [package]
-name = "sleitnick/signal"
-description = "Signal class"
+name = "ddashdev/signal"
+description = "A sleitnick's signal class module fork."
 version = "2.0.3"
 license = "MIT"
-authors = ["Stephen Leitnick"]
 registry = "https://github.com/UpliftGames/wally-index"
 realm = "shared"
 exclude = ["node_modules", "package.json", "**/*.ts"]
