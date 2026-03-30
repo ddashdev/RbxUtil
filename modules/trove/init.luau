@@ -6,15 +6,15 @@ export type Trove = {
 	Extend: (self: Trove) -> Trove,
 	Clone: <T>(self: Trove, instance: T & Instance) -> T,
 	Construct: <T, A...>(self: Trove, class: Constructable<T, A...>, A...) -> T,
-	Connect: (
+	Connect: <T...>(
 		self: Trove,
-		signal: SignalLike | SignalLikeMetatable | RBXScriptSignal,
-		fn: (...any) -> ...any
+		signal: SignalLike<T...> | SignalLikeMetatable<T...> | RBXScriptSignal<T...>,
+		fn: (T...) -> ...any
 	) -> ConnectionLike | ConnectionLikeMetatable,
-	Once: (
+	Once: <T...>(
 		self: Trove,
-		signal: SignalLike | SignalLikeMetatable | RBXScriptSignal,
-		fn: (...any) -> ...any
+		signal: SignalLike<T...> | SignalLikeMetatable<T...> | RBXScriptSignal<T...>,
+		fn: (T...) -> ...any
 	) -> ConnectionLike | ConnectionLikeMetatable,
 	BindToRenderStep: (self: Trove, name: string, priority: number, fn: (dt: number) -> ()) -> (),
 	AddPromise: <T>(self: Trove, promise: (T & PromiseLike) | (T & PromiseLikeMetatable)) -> T,
@@ -57,8 +57,8 @@ export type Trackable =
 	| DisconectableMetatable
 	| DisconnectableLowercase
 	| DisconnectableLowercaseMetatable
-	| SignalLike
-	| SignalLikeMetatable
+	| SignalLike<...any>
+	| SignalLikeMetatable<...any>
 
 --[=[
 	@within Trove
@@ -89,9 +89,9 @@ type ConnectionLikeMetatable = typeof(setmetatable(
 	.Connect (self, callback: (...any) -> ...any) -> ConnectionLike
 	.Once (self, callback: (...any) -> ...any) -> ConnectionLike
 ]=]
-type SignalLike = {
-	Connect: (self: SignalLike, callback: (...any) -> ...any) -> ConnectionLike | ConnectionLikeMetatable,
-	Once: (self: SignalLike, callback: (...any) -> ...any) -> ConnectionLike | ConnectionLikeMetatable,
+type SignalLike<T...> = {
+	Connect: (self: SignalLike<T...>, callback: (T...) -> ...any) -> ConnectionLike | ConnectionLikeMetatable,
+	Once: (self: SignalLike<T...>, callback: (T...) -> ...any) -> ConnectionLike | ConnectionLikeMetatable,
 }
 
 --[=[
@@ -101,11 +101,14 @@ type SignalLike = {
 	.Once (self, callback: (...any) -> ...any) -> ConnectionLike
 	@tag Metatable
 ]=]
-type SignalLikeMetatable = typeof(setmetatable(
+type SignalLikeMetatable<T...> = typeof(setmetatable(
 	{},
 	{} :: {
-		Connect: (self: SignalLikeMetatable, callback: (...any) -> ...any) -> ConnectionLike | ConnectionLikeMetatable,
-		Once: (self: SignalLikeMetatable, callback: (...any) -> ...any) -> ConnectionLike | ConnectionLikeMetatable,
+		Connect: (
+			self: SignalLikeMetatable<T...>,
+			callback: (T...) -> ...any
+		) -> ConnectionLike | ConnectionLikeMetatable,
+		Once: (self: SignalLikeMetatable<T...>, callback: (T...) -> ...any) -> ConnectionLike | ConnectionLikeMetatable,
 	}
 ))
 
@@ -444,17 +447,17 @@ end
 	end)
 	```
 ]=]
-function Trove.Connect(
+function Trove.Connect<T...>(
 	self: TroveInternal,
-	signal: SignalLike | SignalLikeMetatable | RBXScriptSignal,
-	fn: (...any) -> ...any
+	signal: SignalLike<T...> | SignalLikeMetatable<T...> | RBXScriptSignal<T...>,
+	fn: (T...) -> ...any
 )
 	if self._cleaning then
 		error("Cannot call trove:Connect() while cleaning", 2)
 	end
 	assertSignalLike(signal)
 
-	local confirmedSignal = signal :: SignalLike
+	local confirmedSignal = signal :: SignalLike<T...>
 
 	return self:Add(confirmedSignal:Connect(fn), "Disconnect")
 end
@@ -477,17 +480,17 @@ end
 	end)
 	```
 ]=]
-function Trove.Once(
+function Trove.Once<T...>(
 	self: TroveInternal,
-	signal: SignalLike | SignalLikeMetatable | RBXScriptSignal,
-	fn: (...any) -> ...any
+	signal: SignalLike<T...> | SignalLikeMetatable<T...> | RBXScriptSignal<T...>,
+	fn: (T...) -> ...any
 )
 	if self._cleaning then
 		error("Cannot call trove:Connect() while cleaning", 2)
 	end
 	assertSignalLike(signal)
 
-	local confirmedSignal = signal :: SignalLike
+	local confirmedSignal = signal :: SignalLike<T...>
 
 	local conn
 	conn = confirmedSignal:Once(function(...)
