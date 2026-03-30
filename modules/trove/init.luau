@@ -11,6 +11,11 @@ export type Trove = {
 		signal: SignalLike | SignalLikeMetatable | RBXScriptSignal,
 		fn: (...any) -> ...any
 	) -> ConnectionLike | ConnectionLikeMetatable,
+	Once: (
+		self: Trove,
+		signal: SignalLike | SignalLikeMetatable | RBXScriptSignal,
+		fn: (...any) -> ...any
+	) -> ConnectionLike | ConnectionLikeMetatable,
 	BindToRenderStep: (self: Trove, name: string, priority: number, fn: (dt: number) -> ()) -> (),
 	AddPromise: <T>(self: Trove, promise: (T & PromiseLike) | (T & PromiseLikeMetatable)) -> T,
 	Add: <T>(self: Trove, object: T & Trackable, cleanupMethod: string?) -> T,
