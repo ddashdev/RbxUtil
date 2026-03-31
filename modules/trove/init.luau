@@ -96,7 +96,7 @@ type ConnectionLikeMetatable = typeof(setmetatable(
 ]=]
 type SignalLike<T...> = {
 	Connect: (self: SignalLike<T...>, callback: (T...) -> ...any) -> ConnectionLike | ConnectionLikeMetatable,
-	Once: (self: SignalLike<T...>, callback: (T...) -> ...any) -> ConnectionLike | ConnectionLikeMetatable,
+	Once: ((self: SignalLike<T...>, callback: (T...) -> ...any) -> ConnectionLike | ConnectionLikeMetatable)?,
 }
 
 --[=[
@@ -113,7 +113,10 @@ type SignalLikeMetatable<T...> = typeof(setmetatable(
 			self: SignalLikeMetatable<T...>,
 			callback: (T...) -> ...any
 		) -> ConnectionLike | ConnectionLikeMetatable,
-		Once: (self: SignalLikeMetatable<T...>, callback: (T...) -> ...any) -> ConnectionLike | ConnectionLikeMetatable,
+		Once: ((
+			self: SignalLikeMetatable<T...>,
+			callback: (T...) -> ...any
+		) -> ConnectionLike | ConnectionLikeMetatable)?,
 	}
 ))
 
@@ -271,10 +274,7 @@ local function assertPromiseLike(object: any)
 end
 
 local function assertSignalLike(object: any)
-	if
-		typeof(object) ~= "RBXScriptSignal"
-		and (typeof(object) ~= "table" or typeof(object.Connect) ~= "function" or typeof(object.Once) ~= "function")
-	then
+	if typeof(object) ~= "RBXScriptSignal" and (typeof(object) ~= "table" or typeof(object.Connect) ~= "function") then
 		error("did not receive a signal as an argument", 3)
 	end
 end
@@ -496,12 +496,27 @@ function Trove.Once<T...>(
 	assertSignalLike(signal)
 
 	local confirmedSignal = signal :: SignalLike<T...>
+	local conn: ConnectionLike | ConnectionLikeMetatable
 
-	local conn
-	conn = confirmedSignal:Once(function(...)
-		fn(...)
-		self:Pop(conn)
-	end)
+	if typeof(confirmedSignal.Once) == "function" then
+		conn = confirmedSignal:Once(function(...)
+			fn(...)
+			self:Pop(conn)
+		end)
+	else
+		local done = false
+
+		conn = confirmedSignal:Connect(function(...)
+			if done then
+				return
+			end
+
+			done = true
+			conn:Disconnect()
+			fn(...)
+			self:Pop(conn)
+		end)
+	end
 
 	return self:Add(conn, "Disconnect")
 end
