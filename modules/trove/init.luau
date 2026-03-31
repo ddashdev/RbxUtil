@@ -496,10 +496,11 @@ function Trove.Once<T...>(
 	assertSignalLike(signal)
 
 	local confirmedSignal = signal :: SignalLike<T...>
-	local conn: ConnectionLike | ConnectionLikeMetatable
+	local connectOnce = confirmedSignal.Once
+	local conn: any
 
-	if typeof(confirmedSignal.Once) == "function" then
-		conn = confirmedSignal:Once(function(...)
+	if typeof(connectOnce) == "function" then
+		conn = connectOnce(confirmedSignal, function(...)
 			fn(...)
 			self:Pop(conn)
 		end)
