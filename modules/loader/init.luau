@@ -90,8 +90,20 @@ function Loader.LoadDescendants(parent: Instance, predicate: PredicateFn?): { [s
 			if predicate and not predicate(descendant) then
 				continue
 			end
-			local m = require(descendant)
-			modules[descendant.Name] = m
+
+			local thread = task.spawn(function()
+				local success, result = pcall(require, descendant)
+
+				if success then
+					modules[descendant.Name] = result
+				else
+					warn(`Error while loading "{descendant.Name}": {result}`)
+				end
+			end)
+
+			if coroutine.status(thread) ~= "dead" then
+				warn(descendant, "yields on require!")
+			end
 		end
 	end
 	return modules
